@@ -7,6 +7,20 @@ const musicas = [
         titulo_musica: "Industry Baby",
         imagem: "/Images/Industry_Baby.png",
         musica: "/musicas/INDUSTRY_BABY.mp3"
+    },
+    {
+        id_musica: 1,
+        Cantor: "Lil Nas X 2",
+        titulo_musica: "Industry Baby 2",
+        imagem: "/Images/Industry_Baby.png",
+        musica: "/musicas/INDUSTRY_BABY.mp3"
+    },
+    {
+        id_musica: 2,
+        Cantor: "Lil Nas X 3",
+        titulo_musica: "Industry Baby 3",
+        imagem: "/Images/Industry_Baby.png",
+        musica: "/musicas/INDUSTRY_BABY.mp3"
     }
 ]
 

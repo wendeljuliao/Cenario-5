@@ -29,6 +29,35 @@ const users = [
                 ]
             }
         ]
+    },
+    {
+        id: 1,
+        email: "teste2@hotmail.com",
+        senha: "1234",
+        nome: "teste 2",
+        dia: "01",
+        mes: "Março",
+        ano: "2000",
+        sexo: "Masculino",
+        noticias: true,
+        termos: true,
+        playlists: [
+            {
+                id: 0,
+                title: "Lil Nas X",
+                sub: "A melhor",
+                imagem: "/Images/Industry_Baby.png",
+                musicas: [
+                    {
+                        id_musica: 0,
+                        Cantor: "Lil Nas X",
+                        titulo_musica: "Industry Baby",
+                        imagem: "/Images/Industry_Baby.png",
+                        musica: "/musicas/INDUSTRY_BABY.mp3"
+                    }
+                ]
+            }
+        ]
     }
 ]
 
@@ -54,7 +83,7 @@ router.put('/update/:id', (req, res) => {
     const newUser = req.body;
 
     for (let i = 0; i < users.length; i++) {
-        if(users[i].id === parseInt(paramId)){
+        if (users[i].id === parseInt(paramId)) {
             users[i] = newUser;
         }
     }
@@ -108,11 +137,15 @@ router.post('/:id/playlists', (req, res) => {
 router.get('/:id/playlists/:pid', (req, res) => {
     const paramId = req.params.id;
     const user = users.find((u) => u.id === parseInt(paramId));
+    if (user != undefined) {
+        const playlistId = req.params.pid;
+        const playlist = user.playlists.find((p) => p.id === parseInt(playlistId));
+        return res.json(playlist);
+    } else {
+        res.status(500).send('Usuário não encontrado!');
+    }
 
-    const playlistId = req.params.pid;
-    const playlist = user.playlists.find((p) => p.id === parseInt(playlistId));
-
-    return res.json(playlist);
+    
 })
 
 // PROCURAR MUSICAS DE UMA PLAYLIST DE UM USUARIO
@@ -175,7 +208,7 @@ router.delete('/:id/playlists/:pid/musicas/:mid', (req, res) => {
                     musica = playlist.musicas.splice(i, 1);
                 }
             }
-            
+
             return res.json(musica);
 
         } else {

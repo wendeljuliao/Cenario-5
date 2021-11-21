@@ -20,8 +20,25 @@ const playlists = [
     },
     {
         id: 1,
-        title: "Lil Nas X",
-        sub: "A melhor",
+        title: "Lil Nas X 2",
+        sub: "A melhor 2",
+        imagem: "/Images/Industry_Baby.png",
+        musicas: [
+            {
+                id_musica: 0,
+                Cantor: "Lil Nas X",
+                titulo_musica: "Industry Baby",
+                imagem: "/Images/Industry_Baby.png",
+                musica: "/musicas/INDUSTRY_BABY.mp3"
+            }
+
+
+        ]
+    },
+    {
+        id: 2,
+        title: "Lil Nas X 3",
+        sub: "A melhor 3",
         imagem: "/Images/Industry_Baby.png",
         musicas: [
             {
