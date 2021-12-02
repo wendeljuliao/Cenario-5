@@ -142,6 +142,37 @@ router.get('/:id/playlists/:pid', (req, res) => {
 
     })
 
+})
+
+// DELETAR ESPECIFICA PLAYLIST DE UM USUARIO
+router.delete('/:id/playlists/:pid', (req, res) => {
+    const paramId = req.params.id;
+    const playlistId = req.params.pid;
+
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").findOne({ _id: ObjectId(paramId) }, function (err, result) {
+            if (err) throw err;
+            console.log(result)
+
+            for (let i = 0; i < result.playlists.length; i++) {
+                if (result.playlists[i].id === parseInt(playlistId)) {
+                    result.playlists.splice(i, 1);
+                }
+            }
+
+            dbo.collection("users").updateOne({ _id: ObjectId(paramId) }, { $set: result }, function (err, result) {
+                if (err) throw err;
+                db.close();
+                return res.json(result);
+            })
+
+
+
+        })
+
+    })
 
 })
 
