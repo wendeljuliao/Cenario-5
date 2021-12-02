@@ -1,43 +1,24 @@
 const router = require('express').Router();
 
-const musicas = [
-    {
-        id_musica: 0,
-        Cantor: "Lil Nas X",
-        titulo_musica: "Industry Baby",
-        imagem: "/Images/Industry_Baby.png",
-        musica: "/musicas/INDUSTRY_BABY.mp3"
-    },
-    {
-        id_musica: 1,
-        Cantor: "Lil Nas X 2",
-        titulo_musica: "Industry Baby 2",
-        imagem: "/Images/Industry_Baby.png",
-        musica: "/musicas/INDUSTRY_BABY.mp3"
-    },
-    {
-        id_musica: 2,
-        Cantor: "Lil Nas X 3",
-        titulo_musica: "Industry Baby 3",
-        imagem: "/Images/Industry_Baby.png",
-        musica: "/musicas/INDUSTRY_BABY.mp3"
-    }
-]
+var { MongoClient, ObjectId } = require('mongodb');
+var url = "mongodb://localhost:27017/";
 
 // ACHAR ESPECIFICA MUSICA
 router.get('/:id', (req, res) => {
-    const paramId = req.params.id;
-    const musica = musicas.find((m) => m.id_musica === parseInt(paramId));
+    const id = req.params.id;
 
-    return res.json(musica);
-})
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("musicas").findOne({_id: ObjectId(id)}, function (err, result) {
+            if (err) throw err;
+            console.log(result)
+            db.close();
+            return res.json(result);
 
-// ADICIONAR MUSICA
-router.post('/', (req, res) => {
-    const musica = req.body;
-    musicas.push(playlist)
+        })
 
-    return res.json(musica);
+    })
 })
 
 // BUSCAR MUSICAS POR TITULO DA MUSICA OU NOME CANTOR 
@@ -57,10 +38,19 @@ router.get('/', (req, res) => {
             return res.json(nomeCantor)
         }
     } else {
-        return res.json(musicas);
+        MongoClient.connect(url, function (err, db) {
+            if (err) throw err;
+            var dbo = db.db("Spotify");
+            dbo.collection("musicas").find({}).toArray(function (err, result) {
+                if (err) throw err;
+                db.close();
+                return res.json(result);
+
+            })
+
+        })
     }
 
-    res.status(500).send('Nada encontrado!');
 
 })
 

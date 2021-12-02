@@ -1,95 +1,62 @@
 const router = require('express').Router();
 
-const users = [
-    {
-        id: 0,
-        email: "teste@hotmail.com",
-        senha: "123",
-        nome: "teste",
-        dia: "01",
-        mes: "Abril",
-        ano: "2000",
-        sexo: "Masculino",
-        noticias: true,
-        termos: true,
-        playlists: [
-            {
-                id: 0,
-                title: "Lil Nas X",
-                sub: "A melhor",
-                imagem: "/Images/Industry_Baby.png",
-                musicas: [
-                    {
-                        id_musica: 0,
-                        Cantor: "Lil Nas X",
-                        titulo_musica: "Industry Baby",
-                        imagem: "/Images/Industry_Baby.png",
-                        musica: "/musicas/INDUSTRY_BABY.mp3"
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        id: 1,
-        email: "teste2@hotmail.com",
-        senha: "1234",
-        nome: "teste 2",
-        dia: "01",
-        mes: "Março",
-        ano: "2000",
-        sexo: "Masculino",
-        noticias: true,
-        termos: true,
-        playlists: [
-            {
-                id: 0,
-                title: "Lil Nas X",
-                sub: "A melhor",
-                imagem: "/Images/Industry_Baby.png",
-                musicas: [
-                    {
-                        id_musica: 0,
-                        Cantor: "Lil Nas X",
-                        titulo_musica: "Industry Baby",
-                        imagem: "/Images/Industry_Baby.png",
-                        musica: "/musicas/INDUSTRY_BABY.mp3"
-                    }
-                ]
-            }
-        ]
-    }
-]
+var { MongoClient, ObjectId } = require('mongodb');
+var url = "mongodb://localhost:27017/";
 
 
 // ACHAR ESPECIFICO USUARIO
 router.get('/:id', (req, res) => {
-    const paramId = req.params.id;
-    const user = users.find((u) => u.id === parseInt(paramId));
-    return res.json(user)
+    const id = req.params.id;
+
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").findOne({ _id: ObjectId(id) }, function (err, result) {
+            if (err) throw err;
+            console.log(result)
+            db.close();
+            return res.json(result);
+
+        })
+
+    })
 })
 
 // ADICIONAR USUARIO
 router.post('/', (req, res) => {
     const user = req.body;
-    users.push(user);
 
-    return res.json(user);
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").insertOne(user, function (err, result) {
+            if (err) throw err;
+            console.log(result)
+            db.close();
+            return res.json(result);
+
+        })
+
+    })
+
 })
 
 // ATUALIZAR USUARIO
 router.put('/update/:id', (req, res) => {
     const paramId = req.params.id;
-    const newUser = req.body;
+    const userUpdate = req.body;
 
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].id === parseInt(paramId)) {
-            users[i] = newUser;
-        }
-    }
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").updateOne({ _id: ObjectId(paramId) }, { $set: userUpdate }, function (err, result) {
+            if (err) throw err;
+            console.log(result.modifiedCount);
+            db.close();
+            return res.json(result.modifiedCount);
+        })
 
-
-    return res.json(users);
+    })
 })
 
 
@@ -97,127 +64,174 @@ router.put('/update/:id', (req, res) => {
 router.get('/', (req, res) => {
     const paramEmail = req.query.email;
 
-    const user = users.find((u) => u.email === paramEmail);
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").find({ email: paramEmail }).toArray(function (err, result) {
+            if (err) throw err;
+            console.log(result)
+            db.close();
+            return res.json(result);
 
-    return res.json(user)
+        })
+
+    })
 
 })
 
 // PROCURAR PLAYLISTS DE UM USUARIO
 router.get('/:id/playlists', (req, res) => {
     const paramId = req.params.id;
-    const user = users.find((u) => u.id === parseInt(paramId));
 
-    if (user != undefined) {
-        return res.json(user.playlists);
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").findOne({ _id: ObjectId(paramId) }, function (err, result) {
+            if (err) throw err;
+            console.log(result)
+            db.close();
+            return res.json(result.playlists);
 
-    } else {
-        res.status(500).send('Usuário não encontrado!');
+        })
 
-    }
+    })
 })
 
 // ADICIONAR PLAYLIST EM UM USUARIO
 router.post('/:id/playlists', (req, res) => {
-    const paramId = req.params.id;
-    const user = users.find((u) => u.id === parseInt(paramId));
+    const id = req.params.id;
+    const playlist = req.body;
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").findOne({ _id: ObjectId(id) }, function (err, user) {
+            if (err) throw err;
+            user.playlists.push(playlist);
 
-    if (user != undefined) {
-        const playlist = req.body;
-        user.playlists.push(playlist)
-        return res.json(playlist);
+            dbo.collection("users").updateOne({ _id: ObjectId(id) }, { $set: user }, function (err, result) {
+                if (err) throw err;
+                db.close();
+                return res.json(result);
+            })
 
-    } else {
-        res.status(500).send('Usuário não encontrado!');
+            console.log(user)
 
-    }
+
+
+
+        })
+
+    })
 })
 
 // PROCURAR ESPECIFICA PLAYLIST DE UM USUARIO
 router.get('/:id/playlists/:pid', (req, res) => {
     const paramId = req.params.id;
-    const user = users.find((u) => u.id === parseInt(paramId));
-    if (user != undefined) {
-        const playlistId = req.params.pid;
-        const playlist = user.playlists.find((p) => p.id === parseInt(playlistId));
-        return res.json(playlist);
-    } else {
-        res.status(500).send('Usuário não encontrado!');
-    }
+    const playlistId = req.params.pid;
 
-    
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").findOne({ _id: ObjectId(paramId) }, function (err, result) {
+            if (err) throw err;
+            console.log(result)
+            db.close();
+            return res.json(result.playlists.find((p) => p.id == parseInt(playlistId)));
+
+        })
+
+    })
+
+
 })
 
 // PROCURAR MUSICAS DE UMA PLAYLIST DE UM USUARIO
 router.get('/:id/playlists/:pid/musicas', (req, res) => {
     const paramId = req.params.id;
-    const user = users.find((u) => u.id === parseInt(paramId));
+    const playlistId = req.params.pid;
 
-    if (user != undefined) {
-        const playlistId = req.params.pid;
-        const playlist = user.playlists.find((p) => p.id === parseInt(playlistId));
-        if (playlist != undefined) {
-            return res.json(playlist.musicas);
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").findOne({ _id: ObjectId(paramId) }, function (err, result) {
+            if (err) throw err;
+            console.log(result)
+            db.close();
 
-        } else {
-            res.status(500).send('Playlist não encontrada!');
+            let playlist = result.playlists.find((p) => p.id == parseInt(playlistId))
 
-        }
-    } else {
-        res.status(500).send('Usuário não encontrada!');
-    }
+            if (playlist != undefined) {
+                return res.json(playlist.musicas);
+            }
+            return res.status(500).send('Playlist não encontrada!');
+
+        })
+
+    })
 
 })
 
 // ADICIONAR MUSICA EM UMA PLAYLIST DE UM USUARIO
 router.post('/:id/playlists/:pid/musicas', (req, res) => {
     const paramId = req.params.id;
-    const user = users.find((u) => u.id === parseInt(paramId));
+    const playlistId = req.params.pid;
+    const musicaNova = req.body;
 
-    if (user != undefined) {
-        const playlistId = req.params.pid;
-        const playlist = user.playlists.find((p) => p.id === parseInt(playlistId));
-        if (playlist != undefined) {
-            const musica = req.body;
-            playlist.musicas.push(musica);
-            return res.json(musica);
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").findOne({ _id: ObjectId(paramId) }, function (err, result) {
+            if (err) throw err;
+            console.log(result)
 
-        } else {
-            res.status(500).send('Playlist não encontrada!');
+            let playlist = result.playlists.find((p) => p.id == parseInt(playlistId))
 
-        }
-    } else {
-        res.status(500).send('Usuário não encontrada!');
-    }
+            if (playlist != undefined) {
+                playlist.musicas.push(musicaNova)
+                dbo.collection("users").updateOne({ _id: ObjectId(paramId) }, { $set: result }, function (err, result) {
+                    if (err) throw err;
+                    db.close();
+                    return res.json(result);
+                })
 
+            }
+
+        })
+
+    })
 })
 
 // DELETAR ESPECIFICA MUSICA DE UMA PLAYLIST DE UM USUARIO
 router.delete('/:id/playlists/:pid/musicas/:mid', (req, res) => {
     const paramId = req.params.id;
-    const user = users.find((u) => u.id === parseInt(paramId));
+    const playlistId = req.params.pid;
+    const musicaId = req.params.mid;
+    MongoClient.connect(url, function (err, db) {
+        if (err) throw err;
+        var dbo = db.db("Spotify");
+        dbo.collection("users").findOne({ _id: ObjectId(paramId) }, function (err, result) {
+            if (err) throw err;
+            console.log(result)
 
-    if (user != undefined) {
-        const playlistId = req.params.pid;
-        const playlist = user.playlists.find((p) => p.id === parseInt(playlistId));
-        if (playlist != undefined) {
-            const musicaId = req.params.mid;
-            let musica;
-            for (let i = 0; i < playlist.musicas.length; i++) {
-                if (playlist.musicas[i].id_musica === parseInt(musicaId)) {
-                    musica = playlist.musicas.splice(i, 1);
+            let playlist = result.playlists.find((p) => p.id == parseInt(playlistId))
+
+            if (playlist != undefined) {
+                for (let i = 0; i < playlist.musicas.length; i++) {
+                    if (playlist.musicas[i].id_musica === parseInt(musicaId)) {
+                        playlist.musicas.splice(i, 1);
+                    }
                 }
+                dbo.collection("users").updateOne({ _id: ObjectId(paramId) }, { $set: result }, function (err, result) {
+                    if (err) throw err;
+                    db.close();
+                    return res.json(result);
+                })
+
             }
 
-            return res.json(musica);
+        })
 
-        } else {
-            res.status(500).send('Playlist não encontrada!');
-
-        }
-    } else {
-        res.status(500).send('Usuário não encontrada!');
-    }
+    })
 
 })
 
