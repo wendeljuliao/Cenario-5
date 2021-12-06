@@ -250,6 +250,7 @@ router.delete('/:id/playlists/:pid/musicas/:mid', (req, res) => {
                 for (let i = 0; i < playlist.musicas.length; i++) {
                     if (playlist.musicas[i].id_musica === parseInt(musicaId)) {
                         playlist.musicas.splice(i, 1);
+                        break;
                     }
                 }
                 dbo.collection("users").updateOne({ _id: ObjectId(paramId) }, { $set: result }, function (err, result) {
